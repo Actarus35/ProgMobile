@@ -120,37 +120,52 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppNavigation(navController: NavHostController, innerPadding: PaddingValues) {
+fun AppNavigation(navController: NavHostController) {
 
     NavHost(navController, startDestination = Screen.GameList.route) {
         composable(Screen.GameList.route) {
-            GameListScreen(navController, innerPadding)
+            GameListScreen(navController)
         }
         composable(
             Screen.GameDetail.route,
             arguments = listOf(navArgument("gameId") { type = NavType.IntType })
         ) { backStachEntry ->
             val gameId = backStachEntry.arguments?.getInt("gameId")
-            GameDetailScreen(navController, gameId, innerPadding)
+            GameDetailScreen(navController, gameId)
         }
     }
 }
 
 // Liste des jeux
 @Composable
-fun GameListScreen(navController: NavController, innerPadding: PaddingValues) {
-    LazyColumn(modifier = Modifier.padding(innerPadding)) {
-        items(IGDB.games) { game ->
-            GameCard(game = game, onGameClick = { gameId ->
-                navController.navigate(Screen.GameDetail.createRoute(gameId))
-            })
+@OptIn(ExperimentalMaterial3Api::class)
+fun GameListScreen(navController: NavController) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = topAppBarColors(
+                    containerColor = Color(0xFFFF8C00),
+                    titleContentColor = Color.Black,
+                ),
+                title = { Text("My Games List") }
+            )
+        },
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
+        LazyColumn(modifier = Modifier.padding(innerPadding)) {
+            items(IGDB.games) { game ->
+                GameCard(game = game, onGameClick = { gameId ->
+                    navController.navigate(Screen.GameDetail.createRoute(gameId))
+                })
+            }
         }
     }
 }
 
 // Ecran de détail du jeu
 @Composable
-fun GameDetailScreen(navController: NavController, gameId: Int?, innerPadding: PaddingValues) {
+@OptIn(ExperimentalMaterial3Api::class)
+fun GameDetailScreen(navController: NavController, gameId: Int?) {
     val game = IGDB.games.find { it.id == gameId?.toLong() }
 
     if (game == null) {
@@ -158,38 +173,53 @@ fun GameDetailScreen(navController: NavController, gameId: Int?, innerPadding: P
         return
     }
 
-    val modifiedPadding = PaddingValues(
-        start = innerPadding.calculateStartPadding(LayoutDirection.Ltr) + 16.dp,
-        top = innerPadding.calculateTopPadding() + 16.dp,
-        end = innerPadding.calculateEndPadding(LayoutDirection.Ltr) + 16.dp,
-        bottom = innerPadding.calculateBottomPadding() + 16.dp
-    )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = topAppBarColors(
+                    containerColor = Color(0xFFFF8C00),
+                    titleContentColor = Color.Black,
+                ),
+                title = { Text(game.name) }
+            )
+        },
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(modifiedPadding),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        AsyncImage(
-            model = "https:" + IGDB.covers.find { it.id == game.cover }?.url,
-            contentDescription = game.name,
-            modifier = Modifier
-                .size(200.dp)
-                .clip(RoundedCornerShape(12.dp))
+        val modifiedPadding = PaddingValues(
+            start = innerPadding.calculateStartPadding(LayoutDirection.Ltr) + 16.dp,
+            top = innerPadding.calculateTopPadding() + 16.dp,
+            end = innerPadding.calculateEndPadding(LayoutDirection.Ltr) + 16.dp,
+            bottom = innerPadding.calculateBottomPadding() + 16.dp
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Genres : " + game.genres.joinToString(", ") { genreId ->
-            IGDB.genres.find { it.id == genreId }?.name ?: "Inconnu"
-        })
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Résumé : " + game.summary)
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { navController.popBackStack() }) {
-            Text("Retour")
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(modifiedPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AsyncImage(
+                model = "https:" + IGDB.covers.find { it.id == game.cover }?.url,
+                contentDescription = game.name,
+                modifier = Modifier
+                    .size(200.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = "Genres : " + game.genres.joinToString(", ") { genreId ->
+                IGDB.genres.find { it.id == genreId }?.name ?: "Inconnu"
+            })
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = "Résumé : " + game.summary)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = { navController.popBackStack() }) {
+                Text("Retour")
+            }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -204,22 +234,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             MyGamesListTheme {
-                Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            colors = topAppBarColors(
-                                containerColor = Color(0xFFFF8C00),
-                                titleContentColor = Color.Black,
-                            ),
-                            title = { Text("My Games List") }
-                        )
-                    },
-                    modifier = Modifier.fillMaxSize()
-                ) { innerPadding ->
-                    AppNavigation(navController, innerPadding)
-                }
+                AppNavigation(navController)
             }
         }
     }
 }
-
