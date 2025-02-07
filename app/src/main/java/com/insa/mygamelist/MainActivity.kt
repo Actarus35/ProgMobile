@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,13 +19,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,7 +43,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -61,11 +63,10 @@ import coil3.compose.AsyncImage
 import com.insa.mygamelist.data.Game
 import com.insa.mygamelist.data.IGDB
 import com.insa.mygamelist.ui.theme.MyGamesListTheme
-import kotlinx.serialization.Serializable
 
 sealed class Screen(val route: String) {
-    object GameList : Screen("gameList")
-    object GameDetail : Screen("gameDetail/{gameId}") {
+    data object GameList : Screen("gameList")
+    data object GameDetail : Screen("gameDetail/{gameId}") {
         fun createRoute(gameId: Any?) = "gameDetail/$gameId"
     }
 }
@@ -93,7 +94,7 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit) {
                     .padding(7.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Column() {
+            Column {
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
@@ -105,7 +106,7 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit) {
                         fontSize = 18.sp
                     )
                 )
-                Row() {
+                Row {
                     val genres = game.genres.mapNotNull { genreId ->
                         IGDB.genres.find { it.id == genreId }?.name
                     }.joinToString(", ")
@@ -124,8 +125,6 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit) {
 
 
 //Composant principal avec navigation
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation(navController: NavHostController) {
 
@@ -136,8 +135,8 @@ fun AppNavigation(navController: NavHostController) {
         composable(
             Screen.GameDetail.route,
             arguments = listOf(navArgument("gameId") { type = NavType.IntType })
-        ) { backStachEntry ->
-            val gameId = backStachEntry.arguments?.getInt("gameId")
+        ) { backStackEntry ->
+            val gameId = backStackEntry.arguments?.getInt("gameId")
             GameDetailScreen(navController, gameId)
         }
     }
@@ -189,7 +188,7 @@ fun GameDetailScreen(navController: NavController, gameId: Int?) {
                 ),
                 title = { Text(game.name) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() } ) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Retour"
@@ -215,6 +214,19 @@ fun GameDetailScreen(navController: NavController, gameId: Int?) {
                 .padding(modifiedPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                        append(game.name)
+                    }
+                },
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp
+                ),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             AsyncImage(
                 model = "https:" + IGDB.covers.find { it.id == game.cover }?.url,
                 contentDescription = game.name,
@@ -223,17 +235,33 @@ fun GameDetailScreen(navController: NavController, gameId: Int?) {
                     .clip(RoundedCornerShape(12.dp))
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "Genres : " + game.genres.joinToString(", ") { genreId ->
-                IGDB.genres.find { it.id == genreId }?.name ?: "Inconnu"
-            })
+            Text(
+                text = game.genres.joinToString(", ") { genreId ->
+                    IGDB.genres.find { it.id == genreId }?.name ?: "Inconnu"
+                },
+                style = TextStyle(
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 12.sp
+                )
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                items(game.platforms) { idPlatform ->
+                    val logo = IGDB.platforms.find { it.id == idPlatform}?.platformLogo
+                    AsyncImage(
+                        model = "https:" + IGDB.platform_logos.find { it.id == logo }?.url,
+                        contentDescription = IGDB.platforms.find { it.id == idPlatform}?.name,
+                        modifier = Modifier
+                            .size(75.dp)
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
             Text(text = "Résumé : " + game.summary)
         }
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
 
 

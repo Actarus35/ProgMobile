@@ -1,7 +1,6 @@
 package com.insa.mygamelist.data
 
 import android.content.Context
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.insa.mygamelist.R
@@ -48,10 +47,10 @@ object IGDB {
 @Serializable
 data class Cover(val id: Long, val url: String)
 @Serializable
-data class Game(val id: Long, val cover: Long, val first_release_date: Long, val genres: List<Long>, val name: String, val platforms: List<Int>, val summary: String, val total_rating: Double)
+data class Game(val id: Long, val cover: Long, val firstReleaseDate: Long, val genres: List<Long>, val name: String, val platforms: List<Int>, val summary: String, val totalRating: Double)
 @Serializable
 data class Genre(val id: Long, val name: String)
 @Serializable
 data class PlatformLogo(val id: Long, val url: String)
 @Serializable
-data class Platform(val id: Long, val name: String, val platform_logo: Long)
+data class Platform(val id: Int, val name: String, val platformLogo: Long)
