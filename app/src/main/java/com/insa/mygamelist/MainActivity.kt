@@ -54,23 +54,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import coil3.compose.AsyncImage
 import com.insa.mygamelist.data.Game
 import com.insa.mygamelist.data.IGDB
 import com.insa.mygamelist.ui.theme.MyGamesListTheme
+import kotlinx.serialization.Serializable
 
-sealed class Screen(val route: String) {
-    data object GameList : Screen("gameList")
-    data object GameDetail : Screen("gameDetail/{gameId}") {
-        fun createRoute(gameId: Any?) = "gameDetail/$gameId"
-    }
-}
+@Serializable
+object GameList
 
+@Serializable
+data class GameDetail(val gameId: Long)
 
 // Carte de jeu
 @Composable
@@ -128,16 +125,15 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit) {
 @Composable
 fun AppNavigation(navController: NavHostController) {
 
-    NavHost(navController, startDestination = Screen.GameList.route) {
-        composable(Screen.GameList.route) {
+    NavHost(navController, startDestination = GameList) {
+        composable<GameList> {
             GameListScreen(navController)
         }
-        composable(
-            Screen.GameDetail.route,
-            arguments = listOf(navArgument("gameId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val gameId = backStackEntry.arguments?.getInt("gameId")
-            GameDetailScreen(navController, gameId)
+        composable <GameDetail> { backStackEntry ->
+            val gameDetail = backStackEntry.arguments?.let { bundle ->
+                GameDetail(gameId = bundle.getLong("gameId"))
+            }
+            GameDetailScreen(navController, gameDetail)
         }
     }
 }
@@ -160,9 +156,9 @@ fun GameListScreen(navController: NavController) {
     ) { innerPadding ->
         LazyColumn(modifier = Modifier.padding(innerPadding)) {
             items(IGDB.games) { game ->
-                GameCard(game = game, onGameClick = { gameId ->
-                    navController.navigate(Screen.GameDetail.createRoute(gameId))
-                })
+                GameCard(game) {
+                    navController.navigate(GameDetail(game.id))
+                }
             }
         }
     }
@@ -171,14 +167,8 @@ fun GameListScreen(navController: NavController) {
 // Ecran de détail du jeu
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun GameDetailScreen(navController: NavController, gameId: Int?) {
-    val game = IGDB.games.find { it.id == gameId?.toLong() }
-
-    if (game == null) {
-        Text("Jeu non trouvé", modifier = Modifier.padding(16.dp))
-        return
-    }
-
+fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?) {
+    val game = IGDB.games.find { it.id == gameDetail?.gameId }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -186,9 +176,9 @@ fun GameDetailScreen(navController: NavController, gameId: Int?) {
                     containerColor = Color(0xFFFF8C00),
                     titleContentColor = Color.Black,
                 ),
-                title = { Text(game.name) },
+                title = { Text(game?.name ?: "Détail du jeu") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Retour"
@@ -217,7 +207,7 @@ fun GameDetailScreen(navController: NavController, gameId: Int?) {
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
-                        append(game.name)
+                        append(game?.name)
                     }
                 },
                 style = TextStyle(
@@ -228,17 +218,17 @@ fun GameDetailScreen(navController: NavController, gameId: Int?) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             AsyncImage(
-                model = "https:" + IGDB.covers.find { it.id == game.cover }?.url,
-                contentDescription = game.name,
+                model = "https:" + IGDB.covers.find { it.id == game?.cover }?.url,
+                contentDescription = game?.name,
                 modifier = Modifier
                     .size(200.dp)
                     .clip(RoundedCornerShape(12.dp))
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = game.genres.joinToString(", ") { genreId ->
+                text = game?.genres?.joinToString(", ") { genreId ->
                     IGDB.genres.find { it.id == genreId }?.name ?: "Inconnu"
-                },
+                } ?: "Aucun genre disponible",
                 style = TextStyle(
                     fontStyle = FontStyle.Italic,
                     fontSize = 12.sp
@@ -246,8 +236,8 @@ fun GameDetailScreen(navController: NavController, gameId: Int?) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                items(game.platforms) { idPlatform ->
-                    val logo = IGDB.platforms.find { it.id == idPlatform}?.platformLogo
+                items(game?.platforms ?: emptyList()) { idPlatform ->
+                    val logo = IGDB.platforms.find { it.id == idPlatform}?.platform_logo
                     AsyncImage(
                         model = "https:" + IGDB.platform_logos.find { it.id == logo }?.url,
                         contentDescription = IGDB.platforms.find { it.id == idPlatform}?.name,
@@ -257,7 +247,7 @@ fun GameDetailScreen(navController: NavController, gameId: Int?) {
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "Résumé : " + game.summary)
+            Text(text = "Résumé : " + game?.summary)
         }
     }
 }

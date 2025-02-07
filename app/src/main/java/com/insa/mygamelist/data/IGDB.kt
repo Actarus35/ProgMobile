@@ -47,10 +47,10 @@ object IGDB {
 @Serializable
 data class Cover(val id: Long, val url: String)
 @Serializable
-data class Game(val id: Long, val cover: Long, val firstReleaseDate: Long, val genres: List<Long>, val name: String, val platforms: List<Int>, val summary: String, val totalRating: Double)
+data class Game(val id: Long, val cover: Long, val first_release_date: Long, val genres: List<Long>, val name: String, val platforms: List<Int>, val summary: String, val total_rating: Double)
 @Serializable
 data class Genre(val id: Long, val name: String)
 @Serializable
 data class PlatformLogo(val id: Long, val url: String)
 @Serializable
-data class Platform(val id: Int, val name: String, val platformLogo: Long)
+data class Platform(val id: Int, val name: String, val platform_logo: Long)
