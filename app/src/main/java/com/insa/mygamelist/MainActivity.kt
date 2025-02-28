@@ -26,16 +26,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -142,6 +149,10 @@ fun AppNavigation(navController: NavHostController) {
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun GameListScreen(navController: NavController) {
+
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var isSearching by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -149,16 +160,76 @@ fun GameListScreen(navController: NavController) {
                     containerColor = Color(0xFFFF8C00),
                     titleContentColor = Color.Black,
                 ),
-                title = { Text("My Games List") }
+                title = {
+                    if (isSearching) {
+                        Row (modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,) {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                label = { Text("Recherche un jeu ...") },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                            )
+                            IconButton(onClick = { isSearching = false; searchQuery = "" }) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Fermer la recherche"
+                                )
+                            }
+                        }
+                    } else {
+                        Text("My Games List")
+                    }
+                },
+                actions = {
+                    if (!isSearching) {
+                        IconButton(onClick = { isSearching = true }) {
+                            Icon(Icons.Default.Search, contentDescription = "Rechercher")
+                        }
+                    }
+                }
             )
         },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        LazyColumn(modifier = Modifier.padding(innerPadding)) {
-            items(IGDB.games) { game ->
-                GameCard(game) {
-                    navController.navigate(GameDetail(game.id))
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+        ) {
+
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            val filteredGames = IGDB.games.filter { game ->
+                game.name.contains(searchQuery, ignoreCase = true) ||
+                        game.genres.any { genreId ->
+                            IGDB.genres.find { it.id == genreId }?.name?.contains(
+                                searchQuery,
+                                ignoreCase = true
+                            ) == true
+                        } ||
+                        game.platforms.any { platformID ->
+                            IGDB.platforms.find { it.id == platformID }?.name?.contains(
+                                searchQuery,
+                                ignoreCase = true
+                            ) ==true
+                        }
+            }
+            if (filteredGames.isNotEmpty()) {
+                LazyColumn {
+
+                    items(filteredGames) { game ->
+                        GameCard(game) {
+                            navController.navigate(GameDetail(game.id))
+                        }
+                    }
                 }
+            }else {
+                    Text("No Match :(")
             }
         }
     }
@@ -237,7 +308,7 @@ fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?) {
             Spacer(modifier = Modifier.height(16.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                 items(game?.platforms ?: emptyList()) { idPlatform ->
-                    val logo = IGDB.platforms.find { it.id == idPlatform}?.platform_logo
+                    val logo = IGDB.platforms.find { it.id == idPlatform}?.platformLogo
                     AsyncImage(
                         model = "https:" + IGDB.platform_logos.find { it.id == logo }?.url,
                         contentDescription = IGDB.platforms.find { it.id == idPlatform}?.name,
