@@ -1,5 +1,6 @@
 package com.insa.mygamelist
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,6 +29,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,7 +43,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -78,7 +83,7 @@ data class GameDetail(val gameId: Long)
 
 // Carte de jeu
 @Composable
-fun GameCard(game: Game, onGameClick: (Int) -> Unit) {
+fun GameCard(game: Game, onGameClick: (Int) -> Unit, context: Context, isFavorite: Boolean, onFavoriteChange: (Boolean) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -98,7 +103,7 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit) {
                     .padding(7.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Column {
+            Column (modifier = Modifier.weight(1f)){
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
@@ -123,6 +128,8 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit) {
                     )
                 }
             }
+            FavoriteButton(game, context, isFavorite, onFavoriteChange)
+            Spacer(modifier = Modifier.width(8.dp))
         }
     }
 }
@@ -130,17 +137,17 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit) {
 
 //Composant principal avec navigation
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(navController: NavHostController, context: Context) {
 
     NavHost(navController, startDestination = GameList) {
         composable<GameList> {
-            GameListScreen(navController)
+            GameListScreen(navController, context)
         }
         composable <GameDetail> { backStackEntry ->
             val gameDetail = backStackEntry.arguments?.let { bundle ->
                 GameDetail(gameId = bundle.getLong("gameId"))
             }
-            GameDetailScreen(navController, gameDetail)
+            GameDetailScreen(navController, gameDetail, context)
         }
     }
 }
@@ -148,10 +155,18 @@ fun AppNavigation(navController: NavHostController) {
 // Liste des jeux
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun GameListScreen(navController: NavController) {
+fun GameListScreen(navController: NavController, context: Context) {
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var isSearching by rememberSaveable { mutableStateOf(false) }
+
+    val favoriteStates = remember {
+        mutableStateMapOf<Long, Boolean>().apply {
+            putAll(IGDB.games.associate { it.id to IGDB.isFavorite(it) })
+        }
+    }
+
+
 
     Scaffold(
         topBar = {
@@ -163,7 +178,7 @@ fun GameListScreen(navController: NavController) {
                 title = {
                     if (isSearching) {
                         Row (modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,) {
+                            verticalAlignment = Alignment.CenterVertically) {
                             OutlinedTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
@@ -201,7 +216,6 @@ fun GameListScreen(navController: NavController) {
                 .padding(16.dp)
         ) {
 
-
             Spacer(modifier = Modifier.height(10.dp))
 
             val filteredGames = IGDB.games.filter { game ->
@@ -221,11 +235,13 @@ fun GameListScreen(navController: NavController) {
             }
             if (filteredGames.isNotEmpty()) {
                 LazyColumn {
-
                     items(filteredGames) { game ->
-                        GameCard(game) {
+                        val isFavorite = favoriteStates[game.id] ?: false
+                        GameCard(game, onGameClick =  {
                             navController.navigate(GameDetail(game.id))
-                        }
+                        }, context = context, isFavorite = isFavorite, onFavoriteChange = { newFavoriteState ->
+                            favoriteStates[game.id] = newFavoriteState
+                        })
                     }
                 }
             }else {
@@ -238,8 +254,11 @@ fun GameListScreen(navController: NavController) {
 // Ecran de détail du jeu
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?) {
-    val game = IGDB.games.find { it.id == gameDetail?.gameId }
+fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?, context: Context) {
+    val game = IGDB.games.find { it.id == gameDetail?.gameId }?: return
+
+    var isFavorite by remember { mutableStateOf(IGDB.isFavorite(game)) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -247,7 +266,13 @@ fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?) {
                     containerColor = Color(0xFFFF8C00),
                     titleContentColor = Color.Black,
                 ),
-                title = { Text(game?.name ?: "Détail du jeu") },
+                title = {
+                    Row (modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically){
+                        Text(game.name,
+                            modifier = Modifier.weight(1f))
+                        FavoriteButton(game, context, isFavorite = isFavorite, onFavoriteChange = { newFavoriteState -> isFavorite = newFavoriteState})
+                    } },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
@@ -278,7 +303,7 @@ fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?) {
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
-                        append(game?.name)
+                        append(game.name)
                     }
                 },
                 style = TextStyle(
@@ -289,17 +314,17 @@ fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             AsyncImage(
-                model = "https:" + IGDB.covers.find { it.id == game?.cover }?.url,
-                contentDescription = game?.name,
+                model = "https:" + IGDB.covers.find { it.id == game.cover }?.url,
+                contentDescription = game.name,
                 modifier = Modifier
                     .size(200.dp)
                     .clip(RoundedCornerShape(12.dp))
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = game?.genres?.joinToString(", ") { genreId ->
+                text = game.genres.joinToString(", ") { genreId ->
                     IGDB.genres.find { it.id == genreId }?.name ?: "Inconnu"
-                } ?: "Aucun genre disponible",
+                },
                 style = TextStyle(
                     fontStyle = FontStyle.Italic,
                     fontSize = 12.sp
@@ -307,7 +332,7 @@ fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                items(game?.platforms ?: emptyList()) { idPlatform ->
+                items(game.platforms) { idPlatform ->
                     val logo = IGDB.platforms.find { it.id == idPlatform}?.platformLogo
                     AsyncImage(
                         model = "https:" + IGDB.platform_logos.find { it.id == logo }?.url,
@@ -318,13 +343,28 @@ fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?) {
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "Résumé : " + game?.summary)
+            Text(text = "Résumé : " + game.summary)
         }
     }
 }
 
-class MainActivity : ComponentActivity() {
+@Composable
+fun FavoriteButton(game: Game, context: Context, isFavorite: Boolean, onFavoriteChange: (Boolean) -> Unit) {
+    IconButton(
+        onClick = {
+            IGDB.toggleFavorite(context, game)
+            onFavoriteChange(!isFavorite)
+        }
+    ) {
+        Icon(
+            imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
+            contentDescription = if (isFavorite) "Retirer des favoris" else "Ajouter aux favoris",
+            tint = if (isFavorite) Color.Yellow else Color.LightGray
+        )
+    }
+}
 
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -335,7 +375,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             MyGamesListTheme {
-                AppNavigation(navController)
+                AppNavigation(navController, this)
             }
         }
     }

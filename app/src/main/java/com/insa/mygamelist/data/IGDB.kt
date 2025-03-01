@@ -14,35 +14,52 @@ object IGDB {
     lateinit var genres: List<Genre>
     lateinit var platform_logos: List<PlatformLogo>
     lateinit var platforms: List<Platform>
+    private var favorites: MutableList<Long> = mutableListOf()
 
     fun load(context: Context) {
+        val gson = Gson()
 
-        val coversFromJsonCover: List<Cover> = Gson().fromJson(
+        covers = gson.fromJson(
             context.resources.openRawResource(R.raw.covers).bufferedReader(),
             object : TypeToken<List<Cover>>() {}.type
         )
-        covers = coversFromJsonCover
-        val coversFromJsonGame: List<Game> = Gson().fromJson(
+
+        games = gson.fromJson(
             context.resources.openRawResource(R.raw.games).bufferedReader(),
             object : TypeToken<List<Game>>() {}.type
         )
-        games = coversFromJsonGame
-        val coversFromJsonGenre: List<Genre> = Gson().fromJson(
+
+        genres = gson.fromJson(
             context.resources.openRawResource(R.raw.genres).bufferedReader(),
             object : TypeToken<List<Genre>>() {}.type
         )
-        genres = coversFromJsonGenre
-        val coversFromJsonPlatformLogo: List<PlatformLogo> = Gson().fromJson(
+
+        platform_logos = gson.fromJson(
             context.resources.openRawResource(R.raw.platform_logos).bufferedReader(),
             object : TypeToken<List<PlatformLogo>>() {}.type
         )
-        platform_logos = coversFromJsonPlatformLogo
-        val coversFromJsonPlatform: List<Platform> = Gson().fromJson(
+
+        platforms = gson.fromJson(
             context.resources.openRawResource(R.raw.platforms).bufferedReader(),
             object : TypeToken<List<Platform>>() {}.type
         )
-        platforms = coversFromJsonPlatform
+
+        favorites = FavoriteManager.loadFavorites(context).toMutableList()
     }
+
+    fun toggleFavorite(context: Context, game: Game){
+        if (favorites.contains(game.id)){
+            favorites.remove(game.id)
+        } else {
+            favorites.add(game.id)
+        }
+        FavoriteManager.saveFavorites(context, favorites)
+    }
+
+    fun isFavorite(game: Game): Boolean {
+        return favorites.contains(game.id)
+    }
+
 }
 
 @Serializable
