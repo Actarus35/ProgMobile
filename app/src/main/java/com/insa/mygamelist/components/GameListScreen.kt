@@ -35,11 +35,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.insa.mygamelist.GameDetail
+import com.insa.mygamelist.data.Game
 import com.insa.mygamelist.data.IGDB
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun GameListScreen(navController: NavController, context: Context) {
+fun GameListScreen(navController: NavController, context: Context, filteredGames: List<Game>, onFilterChange: (List<Game>) -> Unit) {
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var isSearching by rememberSaveable { mutableStateOf(false) }
@@ -105,7 +106,7 @@ fun GameListScreen(navController: NavController, context: Context) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            val filteredGames = IGDB.games.filter { game ->
+            val filteredGamesList = filteredGames.filter { game ->
                 game.name.contains(searchQuery, ignoreCase = true) ||
                         game.genres.any { genreId ->
                             IGDB.genres.find { it.id == genreId }?.name?.contains(
@@ -117,12 +118,15 @@ fun GameListScreen(navController: NavController, context: Context) {
                             IGDB.platforms.find { it.id == platformID }?.name?.contains(
                                 searchQuery,
                                 ignoreCase = true
-                            ) ==true
+                            ) == true
                         }
             }
-            if (filteredGames.isNotEmpty()) {
+
+            onFilterChange(filteredGamesList)
+
+            if (filteredGamesList.isNotEmpty()) {
                 LazyColumn {
-                    items(filteredGames) { game ->
+                    items(filteredGamesList) { game ->
                         val isFavorite = favoriteStates[game.id] == true
                         GameCard(game, onGameClick =  {
                             navController.navigate(GameDetail(game.id))
