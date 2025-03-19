@@ -17,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -63,14 +64,19 @@ fun GameListScreen(navController: NavController, context: Context) {
                             OutlinedTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
-                                label = { Text("Recherche un jeu ...") },
+                                label = { Text(text = "Recherche un jeu ...", color = Color.Black) },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.Black, // Bordure noire quand le champ n'est pas sélectionné
+                                    focusedBorderColor = Color.Black // Bordure noire quand le champ est sélectionné
+                                )
                             )
                             IconButton(onClick = { isSearching = false; searchQuery = "" }) {
                                 Icon(
                                     Icons.Default.Close,
-                                    contentDescription = "Fermer la recherche"
+                                    contentDescription = "Fermer la recherche",
+                                    tint = Color.Black
                                 )
                             }
                         }
@@ -81,7 +87,7 @@ fun GameListScreen(navController: NavController, context: Context) {
                 actions = {
                     if (!isSearching) {
                         IconButton(onClick = { isSearching = true }) {
-                            Icon(Icons.Default.Search, contentDescription = "Rechercher")
+                            Icon(Icons.Default.Search, contentDescription = "Rechercher", tint = Color.Black)
                         }
                     }
                 }

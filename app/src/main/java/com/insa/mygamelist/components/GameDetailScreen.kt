@@ -2,6 +2,8 @@ package com.insa.mygamelist.components
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -57,10 +59,13 @@ import com.insa.mygamelist.data.IGDB
 @OptIn(ExperimentalMaterial3Api::class)
 fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?, context: Context) {
     val game = IGDB.games.find { it.id == gameDetail?.gameId }?: return
+    val darkTheme = isSystemInDarkTheme()
 
     var isFavorite by remember { mutableStateOf(IGDB.isFavorite(game)) }
 
     Log.d("DEBUG Game", "Jeux dans IGDB : $game")
+
+    val cardBackgroundColor = if (darkTheme) Color(0xFF1F1F1F) else Color(0xFFEAE6F2) // Fond de carte
 
     Scaffold(
         topBar = {
@@ -134,11 +139,16 @@ fun GameDetailScreen(navController: NavController, gameDetail: GameDetail?, cont
                 )
             )
             Spacer(modifier = Modifier.height(16.dp))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(cardBackgroundColor)
+            ) {
                 items(game.platforms) { idPlatform ->
-                    val logo = IGDB.platforms.find { it.id == idPlatform}?.platformLogo
+                    val logo = IGDB.platforms.find { it.id == idPlatform}?.platform_logo
                     AsyncImage(
-                        model = "https:" + IGDB.platformLogos.find { it.id == logo }?.url,
+                        model = "https:${IGDB.platformLogos.find { it.id == logo }?.url?.replace("jpg", "png")}",
                         contentDescription = IGDB.platforms.find { it.id == idPlatform}?.name,
                         modifier = Modifier
                             .size(75.dp)

@@ -6,8 +6,8 @@ import okhttp3.Request
 import org.json.JSONObject
 
 object TokenManager {
-    internal const val CLIENT_ID = "YourClientId"
-    private const val CLIENT_SECRET = "YourClientSecret"
+    internal const val CLIENT_ID = "YOUR_CLIENT_ID"
+    private const val CLIENT_SECRET = "YOUR_SECRET"
     private const val TOKEN_URL = "https://id.twitch.tv/oauth2/token"
     private var accessToken: String? = null
 

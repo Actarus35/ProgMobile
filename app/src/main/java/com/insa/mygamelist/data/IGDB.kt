@@ -1,6 +1,7 @@
 package com.insa.mygamelist.data
 
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.insa.mygamelist.GameViewModel
@@ -49,6 +50,8 @@ object IGDB {
             context.resources.openRawResource(R.raw.platforms).bufferedReader(),
             object : TypeToken<List<Platform>>() {}.type
         )
+
+        Log.d("DEBUG PLATFORM", platforms.toString())
 
         favorites = FavoriteManager.loadFavorites(context).toMutableList()
     }

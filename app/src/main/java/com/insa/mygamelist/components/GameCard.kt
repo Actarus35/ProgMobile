@@ -2,6 +2,7 @@ package com.insa.mygamelist.components
 
 import android.content.Context
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,9 +31,15 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.insa.mygamelist.data.Game
 import com.insa.mygamelist.data.IGDB
-
 @Composable
 fun GameCard(game: Game, onGameClick: (Int) -> Unit, context: Context, isFavorite: Boolean, onFavoriteChange: (Boolean) -> Unit) {
+    val darkTheme = isSystemInDarkTheme()
+
+    // Définir les couleurs pour les modes clair et sombre
+    val cardBackgroundColor = if (darkTheme) Color(0xFF1F1F1F) else Color(0xFFEAE6F2) // Fond de carte
+    val textColor = if (darkTheme) Color.White else Color.Black // Texte
+    val subtitleColor = if (darkTheme) Color.LightGray else Color.Gray // Sous-titres (Genres)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -40,7 +47,7 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit, context: Context, isFavorit
             .clickable { onGameClick(game.id.toInt()) },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE6F2))
+        colors = CardDefaults.cardColors(containerColor = cardBackgroundColor) // Appliquer la couleur dynamique de fond
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             val coverUrl = IGDB.covers.find { cover -> cover.id == game.cover }?.url
@@ -54,7 +61,7 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit, context: Context, isFavorit
                     .padding(7.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Column (modifier = Modifier.weight(1f)){
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
@@ -63,7 +70,8 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit, context: Context, isFavorit
                     },
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        color = textColor // Changer la couleur du texte en fonction du thème
                     )
                 )
                 Row {
@@ -75,7 +83,8 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit, context: Context, isFavorit
                         text = "Genres : $genres",
                         fontSize = 14.sp,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        color = subtitleColor // Changer la couleur du sous-titre (genres) en fonction du thème
                     )
                 }
             }

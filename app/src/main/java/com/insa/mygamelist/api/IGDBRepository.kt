@@ -88,7 +88,7 @@ class IGDBRepository() {
     }
 
     suspend fun fetchPlatformLogos(platforms: List<Platform>): List<PlatformLogo> {
-        val platformLogosIds = platforms.mapNotNull { it.platformLogo }
+        val platformLogosIds = platforms.mapNotNull { it.platform_logo }
         val platformLogosIdsString = platformLogosIds.joinToString(",")
         return withContext(Dispatchers.IO) {
             val body = "fields url; where id = ($platformLogosIdsString); limit 500;"
