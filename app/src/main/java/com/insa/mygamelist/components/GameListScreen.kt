@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +41,12 @@ import com.insa.mygamelist.data.IGDB
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun GameListScreen(navController: NavController, context: Context, filteredGames: List<Game>, onFilterChange: (List<Game>) -> Unit) {
+fun GameListScreen(
+    navController: NavController,
+    context: Context,
+    filteredGames: List<Game>,
+    onFilterChange: (List<Game>) -> Unit
+) {
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var isSearching by rememberSaveable { mutableStateOf(false) }
@@ -60,17 +66,26 @@ fun GameListScreen(navController: NavController, context: Context, filteredGames
                 ),
                 title = {
                     if (isSearching) {
-                        Row (modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             OutlinedTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
-                                label = { Text(text = "Recherche un jeu ...", color = Color.Black) },
+                                label = {
+                                    Text(
+                                        text = "Recherche un jeu ...",
+                                        color = Color.Black
+                                    )
+                                },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color.Black, // Bordure noire quand le champ n'est pas sélectionné
-                                    focusedBorderColor = Color.Black // Bordure noire quand le champ est sélectionné
+                                    focusedBorderColor = Color.Black, // Bordure noire quand le champ est sélectionné
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black
                                 )
                             )
                             IconButton(onClick = { isSearching = false; searchQuery = "" }) {
@@ -88,7 +103,11 @@ fun GameListScreen(navController: NavController, context: Context, filteredGames
                 actions = {
                     if (!isSearching) {
                         IconButton(onClick = { isSearching = true }) {
-                            Icon(Icons.Default.Search, contentDescription = "Rechercher", tint = Color.Black)
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = "Rechercher",
+                                tint = Color.Black
+                            )
                         }
                     }
                 }
@@ -106,36 +125,41 @@ fun GameListScreen(navController: NavController, context: Context, filteredGames
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            val filteredGamesList = filteredGames.filter { game ->
-                game.name.contains(searchQuery, ignoreCase = true) ||
-                        game.genres.any { genreId ->
-                            IGDB.genres.find { it.id == genreId }?.name?.contains(
-                                searchQuery,
-                                ignoreCase = true
-                            ) == true
-                        } ||
-                        game.platforms.any { platformID ->
-                            IGDB.platforms.find { it.id == platformID }?.name?.contains(
-                                searchQuery,
-                                ignoreCase = true
-                            ) == true
+            LaunchedEffect(searchQuery) {
+                onFilterChange(
+                    if (searchQuery.isBlank()) {
+                        IGDB.games
+                    } else {
+                        IGDB.games.filter { game ->
+                            game.name.contains(searchQuery, ignoreCase = true) ||
+                                    game.genres.any { genreId ->
+                                        IGDB.genres.find { it.id == genreId }?.name?.contains(searchQuery, ignoreCase = true) == true
+                                    } ||
+                                    game.platforms.any { platformID ->
+                                        IGDB.platforms.find { it.id == platformID }?.name?.contains(searchQuery, ignoreCase = true) == true
+                                    }
                         }
+                    }
+                )
             }
 
-            onFilterChange(filteredGamesList)
-
-            if (filteredGamesList.isNotEmpty()) {
+            if (filteredGames.isNotEmpty()) {
                 LazyColumn {
-                    items(filteredGamesList) { game ->
+                    items(filteredGames) { game ->
                         val isFavorite = favoriteStates[game.id] == true
-                        GameCard(game, onGameClick =  {
-                            navController.navigate(GameDetail(game.id))
-                        }, context = context, isFavorite = isFavorite, onFavoriteChange = { newFavoriteState ->
-                            favoriteStates[game.id] = newFavoriteState
-                        })
+                        GameCard(
+                            game,
+                            onGameClick = {
+                                navController.navigate(GameDetail(game.id))
+                            },
+                            context = context,
+                            isFavorite = isFavorite,
+                            onFavoriteChange = { newFavoriteState ->
+                                favoriteStates[game.id] = newFavoriteState
+                            })
                     }
                 }
-            }else {
+            } else {
                 Text("No Match :(")
             }
         }

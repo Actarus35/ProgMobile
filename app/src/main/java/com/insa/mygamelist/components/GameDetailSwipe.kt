@@ -55,7 +55,8 @@ fun GameDetailSwipe (navController: NavController, gameDetail: GameDetail?, cont
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Retour"
+                            contentDescription = "Retour",
+                            tint = Color.Black
                         )
                     }
                 }
