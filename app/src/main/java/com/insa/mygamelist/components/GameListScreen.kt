@@ -39,6 +39,7 @@ import com.insa.mygamelist.GameDetail
 import com.insa.mygamelist.data.Game
 import com.insa.mygamelist.data.IGDB
 
+// Fenêtre avec la liste des jeux
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun GameListScreen(
@@ -51,12 +52,14 @@ fun GameListScreen(
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var isSearching by rememberSaveable { mutableStateOf(false) }
 
+    //Gestion des favoris avec la base de données
     val favoriteStates = remember {
         mutableStateMapOf<Long, Boolean>().apply {
             putAll(IGDB.games.associate { it.id to IGDB.isFavorite(it) })
         }
     }
 
+    // Barre principale avec outil de recherche
     Scaffold(
         topBar = {
             TopAppBar(
@@ -82,8 +85,9 @@ fun GameListScreen(
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color.Black, // Bordure noire quand le champ n'est pas sélectionné
-                                    focusedBorderColor = Color.Black, // Bordure noire quand le champ est sélectionné
+                                    //Tout en noir quel que soit le thème
+                                    unfocusedBorderColor = Color.Black,
+                                    focusedBorderColor = Color.Black,
                                     focusedTextColor = Color.Black,
                                     unfocusedTextColor = Color.Black
                                 )
@@ -125,6 +129,7 @@ fun GameListScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            //Permet l'affichage dynamique des filtres
             LaunchedEffect(searchQuery) {
                 onFilterChange(
                     if (searchQuery.isBlank()) {
@@ -143,6 +148,7 @@ fun GameListScreen(
                 )
             }
 
+            //Affichage des jeux en fonction des filtres et redirection avec le navController
             if (filteredGames.isNotEmpty()) {
                 LazyColumn {
                     items(filteredGames) { game ->

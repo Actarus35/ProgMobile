@@ -28,6 +28,8 @@ import com.insa.mygamelist.GameDetail
 import com.insa.mygamelist.data.Game
 import com.insa.mygamelist.data.IGDB
 
+// Fonction de gestion du swipe pour l'affichage des détails des jeux
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameDetailSwipe (navController: NavController, gameDetail: GameDetail?, context: Context, filteredGames: List<Game>) {
@@ -64,6 +66,7 @@ fun GameDetailSwipe (navController: NavController, gameDetail: GameDetail?, cont
         },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
+        //Permet le swipe horizontal
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) {
                 page -> GameDetailScreen(filteredGames[page].id, innerPadding)
         }

@@ -16,12 +16,14 @@ object IGDB {
     var platformLogos: List<PlatformLogo> = emptyList()
     private var favorites: MutableList<Long> = mutableListOf()
 
+    //Récupération des données avec l'API
     @Suppress("unused")
     fun loadWithApi(context: Context, gameViewModel: GameViewModel) {
         gameViewModel.loadData()
         FavoriteManager.saveFavorites(context, favorites)
     }
 
+    //Récupération des données sans l'API
     @Suppress("unused")
     fun load(context: Context) {
         val gson = Gson()
@@ -56,6 +58,7 @@ object IGDB {
         favorites = FavoriteManager.loadFavorites(context).toMutableList()
     }
 
+    //Gestion des favoris lorsqu'on clique sur l'étoile et sauvegarde dans la base de données
     fun toggleFavorite(context: Context, game: Game){
         if (favorites.contains(game.id)){
             favorites.remove(game.id)
@@ -65,6 +68,7 @@ object IGDB {
         FavoriteManager.saveFavorites(context, favorites)
     }
 
+    //Fonction de vérification si un jeu est un favori
     fun isFavorite(game: Game): Boolean {
         return favorites.contains(game.id)
     }

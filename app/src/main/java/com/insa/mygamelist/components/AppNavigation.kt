@@ -14,17 +14,20 @@ import com.insa.mygamelist.GameList
 import com.insa.mygamelist.data.Game
 import com.insa.mygamelist.data.IGDB
 
+//Fonction de navigation
 @Composable
 fun AppNavigation(navController: NavHostController, context: Context) {
 
     var filteredGames by remember { mutableStateOf<List<Game>>(IGDB.games) }
 
     NavHost(navController, startDestination = GameList) {
+        // Premier composable vers la liste de jeux
         composable<GameList> {
             GameListScreen(navController, context, filteredGames) { newFilteredGames ->
                 filteredGames = newFilteredGames
             }
         }
+        // Deuxième composable vers les détails d'un jeu permettant le swipe
         composable <GameDetail> { backStackEntry ->
             val gameDetail = backStackEntry.arguments?.let { bundle ->
                 GameDetail(gameId = bundle.getLong("gameId"))

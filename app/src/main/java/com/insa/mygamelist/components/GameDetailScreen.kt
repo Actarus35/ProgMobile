@@ -38,15 +38,20 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.insa.mygamelist.data.IGDB
 
+
+//Fonction d'affichage du détail des jeux
+
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun GameDetailScreen(id: Long, innerPadding: PaddingValues) {
 
     val game = IGDB.games.find { it.id == id }?: return
+    //Gestion du thème sur le téléphone
     val darkTheme = isSystemInDarkTheme()
     val cardBackgroundColor =
         if (darkTheme) Color(0xFF1F1F1F) else Color(0xFFEAE6F2) // Fond de carte
 
+    //Mise en place d'un padding pour que se soit plus joli
     val modifiedPadding = PaddingValues(
         start = innerPadding.calculateStartPadding(LayoutDirection.Ltr) + 16.dp,
         top = innerPadding.calculateTopPadding() + 16.dp,

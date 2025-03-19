@@ -4,9 +4,13 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 import com.insa.mygamelist.api.IGDBRepository
-import com.insa.mygamelist.data.*
+import com.insa.mygamelist.data.Cover
+import com.insa.mygamelist.data.Game
+import com.insa.mygamelist.data.Genre
+import com.insa.mygamelist.data.Platform
+import com.insa.mygamelist.data.PlatformLogo
+import kotlinx.coroutines.launch
 
 
 class GameViewModel : ViewModel() {
@@ -21,26 +25,29 @@ class GameViewModel : ViewModel() {
     // Fonction pour charger les données avec gestion des dépendances
     fun loadData() {
         viewModelScope.launch {
-            // Récupérer d'abord les jeux
+            // Récupération des jeux
             val loadedGames = repository.fetchGames()
             Log.d("GameViewModel", "Nombre de jeux récupérés : ${loadedGames.size}")
             games.value = loadedGames
 
+            //Vérification de récupération de jeux
             if (games.value.isEmpty()) {
                 Log.d("Coucou", "ERREUR: Aucun jeu récupéré. Vérifie l'API.")
                 return@launch
             }
 
-            // Puis récupérer les autres données en fonction des jeux
-            val loadedCovers = repository.fetchCovers(games.value)  // Si tu as besoin d'utiliser les jeux pour récupérer les covers
-            val loadedGenres = repository.fetchGenres(games.value)  // Si tu veux lier genres aux jeux
-            val loadedPlatform = repository.fetchPlatforms(games.value)  // Si tu as besoin de lier les platforms aux jeux
+            // Récupération des autres données en fonction des jeux
+            val loadedCovers = repository.fetchCovers(games.value)
+            val loadedGenres = repository.fetchGenres(games.value)
+            val loadedPlatform = repository.fetchPlatforms(games.value)
             covers.value = loadedCovers
             genres.value = loadedGenres
             platforms.value = loadedPlatform
 
-            val loadedPlatformLogo = repository.fetchPlatformLogos(platforms.value)  // Si tu veux lier les logos aux platforms
+            // Récupération des logos de platforms en fonction des platformes
+            val loadedPlatformLogo = repository.fetchPlatformLogos(platforms.value)
             platformLogos.value = loadedPlatformLogo
+            //Logs de test (pour voir d'où venait mon erreur)
             Log.d("GameViewModel", "Nombre de couvertures récupérées : ${loadedCovers.size}")
             Log.d("GameViewModel", "Nombre de genres récupérés : ${loadedGenres.size}")
             Log.d("GameViewModel", "Nombre de platforms récupérés : ${loadedPlatform.size}")

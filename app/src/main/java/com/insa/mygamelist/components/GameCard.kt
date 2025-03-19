@@ -31,11 +31,14 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.insa.mygamelist.data.Game
 import com.insa.mygamelist.data.IGDB
+
+//Affichage des cartes de jeu dans la liste de jeux
+
 @Composable
 fun GameCard(game: Game, onGameClick: (Int) -> Unit, context: Context, isFavorite: Boolean, onFavoriteChange: (Boolean) -> Unit) {
     val darkTheme = isSystemInDarkTheme()
 
-    // Définir les couleurs pour les modes clair et sombre
+    // Définition les couleurs pour les modes clair et sombre
     val cardBackgroundColor = if (darkTheme) Color(0xFF1F1F1F) else Color(0xFFEAE6F2) // Fond de carte
     val textColor = if (darkTheme) Color.White else Color.Black // Texte
     val subtitleColor = if (darkTheme) Color.LightGray else Color.Gray // Sous-titres (Genres)
@@ -71,7 +74,7 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit, context: Context, isFavorit
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = textColor // Changer la couleur du texte en fonction du thème
+                        color = textColor
                     )
                 )
                 Row {
@@ -84,7 +87,7 @@ fun GameCard(game: Game, onGameClick: (Int) -> Unit, context: Context, isFavorit
                         fontSize = 14.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = subtitleColor // Changer la couleur du sous-titre (genres) en fonction du thème
+                        color = subtitleColor
                     )
                 }
             }

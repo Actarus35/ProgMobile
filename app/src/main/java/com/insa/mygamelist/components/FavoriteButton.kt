@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import com.insa.mygamelist.data.Game
 import com.insa.mygamelist.data.IGDB
 
+//Icône de favoris et gestion lors du clic
 @Composable
 fun FavoriteButton(game: Game, context: Context, isFavorite: Boolean, onFavoriteChange: (Boolean) -> Unit) {
     IconButton(

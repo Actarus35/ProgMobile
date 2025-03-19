@@ -29,12 +29,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        //chargement des données de l'API (ne marche pas)
         //TokenManager.loadAccessToken()
-
         //IGDB.loadWithApi(this, gameViewModel)
 
+        //chargement des données sans l'API
         IGDB.load(this)
 
+        //lancement de l'application
         enableEdgeToEdge()
         setContent {
             val navController = rememberNavController()
