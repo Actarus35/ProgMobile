@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,6 +53,7 @@ fun GameListScreen(
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var isSearching by rememberSaveable { mutableStateOf(false) }
+    var isFavoriteList by rememberSaveable {mutableStateOf(false)}
 
     //Gestion des favoris avec la base de données
     val favoriteStates = remember {
@@ -101,7 +104,19 @@ fun GameListScreen(
                             }
                         }
                     } else {
-                        Text("My Games List")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                        Text("My Games List", modifier = Modifier.weight((1f)))
+                        IconButton(onClick = { isFavoriteList = !isFavoriteList }) {
+                            Icon(
+                                if (isFavoriteList) Icons.Filled.Star else Icons.Outlined.Star,
+                                contentDescription = "Tous mes favoris",
+                                tint = if (isFavoriteList) Color.Yellow else Color.LightGray
+                            )
+                        }
+                            }
                     }
                 },
                 actions = {
@@ -130,19 +145,23 @@ fun GameListScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             //Permet l'affichage dynamique des filtres
-            LaunchedEffect(searchQuery) {
+            LaunchedEffect(searchQuery, isFavoriteList) {
                 onFilterChange(
                     if (searchQuery.isBlank()) {
-                        IGDB.games
+                        if(isFavoriteList) {
+                            IGDB.games.filter { game -> favoriteStates[game.id] == true }
+                        } else {
+                            IGDB.games
+                        }
                     } else {
                         IGDB.games.filter { game ->
-                            game.name.contains(searchQuery, ignoreCase = true) ||
+                            (game.name.contains(searchQuery, ignoreCase = true) ||
                                     game.genres.any { genreId ->
                                         IGDB.genres.find { it.id == genreId }?.name?.contains(searchQuery, ignoreCase = true) == true
                                     } ||
                                     game.platforms.any { platformID ->
                                         IGDB.platforms.find { it.id == platformID }?.name?.contains(searchQuery, ignoreCase = true) == true
-                                    }
+                                    }) && (if (isFavoriteList) favoriteStates[game.id] == true else true)
                         }
                     }
                 )
@@ -162,6 +181,24 @@ fun GameListScreen(
                             isFavorite = isFavorite,
                             onFavoriteChange = { newFavoriteState ->
                                 favoriteStates[game.id] = newFavoriteState
+
+                                val hasFavorite = favoriteStates.values.any { it }
+
+                                if (!hasFavorite) {
+                                    isFavoriteList = false
+                                }
+                                onFilterChange(
+                                    IGDB.games.filter { game ->
+                                        (searchQuery.isBlank() ||
+                                                game.name.contains(searchQuery, ignoreCase = true) ||
+                                                game.genres.any { genreId ->
+                                                    IGDB.genres.find { it.id == genreId }?.name?.contains(searchQuery, ignoreCase = true) == true
+                                                } ||
+                                                game.platforms.any { platformID ->
+                                                    IGDB.platforms.find { it.id == platformID }?.name?.contains(searchQuery, ignoreCase = true) == true
+                                                }) && (if (isFavorite) favoriteStates[game.id] == true else true)
+                                    }
+                                )
                             })
                     }
                 }
