@@ -182,23 +182,35 @@ fun GameListScreen(
                             onFavoriteChange = { newFavoriteState ->
                                 favoriteStates[game.id] = newFavoriteState
 
-                                val hasFavorite = favoriteStates.values.any { it }
+                                if (isFavoriteList) {
+                                    val hasFavorite = favoriteStates.values.any { it }
 
-                                if (!hasFavorite) {
-                                    isFavoriteList = false
-                                }
-                                onFilterChange(
-                                    IGDB.games.filter { game ->
-                                        (searchQuery.isBlank() ||
-                                                game.name.contains(searchQuery, ignoreCase = true) ||
-                                                game.genres.any { genreId ->
-                                                    IGDB.genres.find { it.id == genreId }?.name?.contains(searchQuery, ignoreCase = true) == true
-                                                } ||
-                                                game.platforms.any { platformID ->
-                                                    IGDB.platforms.find { it.id == platformID }?.name?.contains(searchQuery, ignoreCase = true) == true
-                                                }) && (if (isFavorite) favoriteStates[game.id] == true else true)
+                                    if (!hasFavorite) {
+                                        isFavoriteList = false
                                     }
-                                )
+
+                                    onFilterChange(
+                                        IGDB.games.filter { game ->
+                                            (searchQuery.isBlank() ||
+                                                    game.name.contains(
+                                                        searchQuery,
+                                                        ignoreCase = true
+                                                    ) ||
+                                                    game.genres.any { genreId ->
+                                                        IGDB.genres.find { it.id == genreId }?.name?.contains(
+                                                            searchQuery,
+                                                            ignoreCase = true
+                                                        ) == true
+                                                    } ||
+                                                    game.platforms.any { platformID ->
+                                                        IGDB.platforms.find { it.id == platformID }?.name?.contains(
+                                                            searchQuery,
+                                                            ignoreCase = true
+                                                        ) == true
+                                                    }) && (if (isFavorite) favoriteStates[game.id] == true else true)
+                                        }
+                                    )
+                                }
                             })
                     }
                 }
